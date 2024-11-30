@@ -1,0 +1,108 @@
+databases:
+  - name: posthog
+    databaseName: posthog
+    user: posthog
+    plan: basic-1gb # Ensure this is a valid plan
+    # storageGB: 10 # Allocate appropriate storage
+    # accessLevel: private # Use 'public' cautiously if required for external access
+
+services:
+  - type: web
+    name: posthog
+    env: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    autoDeploy: true
+    envVars:
+      - key: IS_BEHIND_PROXY
+        value: 1
+      - key: IS_DOCKER
+        value: true
+      - key: POSTHOG_REDIS_HOST
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: host
+      - key: POSTHOG_REDIS_PORT
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: port
+      - key: DATABASE_URL
+        fromDatabase:
+          name: posthog
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEPLOYMENT
+        value: render
+      - key: SKIP_SERVICE_VERSION_REQUIREMENTS
+        value: 1
+
+  - type: pserv
+    name: posthog-redis
+    env: docker
+    autoDeploy: true
+    repo: https://github.com/render-examples/redis.git
+    disk:
+      name: data
+      mountPath: /var/lib/redis
+      sizeGB: 10
+
+  - type: worker
+    name: posthog-worker
+    env: docker
+    dockerfilePath: ./worker/Dockerfile
+    dockerContext: ./worker
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: POSTHOG_REDIS_HOST
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: host
+      - key: POSTHOG_REDIS_PORT
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: port
+      - key: DATABASE_URL
+        fromDatabase:
+          name: posthog
+          property: connectionString
+      - key: IS_DOCKER
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEPLOYMENT
+        value: render
+      - key: SKIP_SERVICE_VERSION_REQUIREMENTS
+        value: 1
+
+  - type: worker
+    name: posthog-plugin-server
+    env: docker
+    dockerfilePath: ./plugin-server/Dockerfile
+    dockerContext: ./plugin-server
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: POSTHOG_REDIS_HOST
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: host
+      - key: POSTHOG_REDIS_PORT
+        fromService:
+          name: posthog-redis
+          type: pserv
+          property: port
+      - key: DATABASE_URL
+        fromDatabase:
+          name: posthog
+          property: connectionString
+      - key: DEPLOYMENT
+        value: render
+      - key: SKIP_SERVICE_VERSION_REQUIREMENTS
+        value: 1
