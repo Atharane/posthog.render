@@ -2,7 +2,7 @@ databases:
   - name: posthog
     databaseName: posthog
     user: posthog
-    plan: pro # $50/month - 10 GB storage
+    plan: pro-8gb
 
 services:
   - type: web
