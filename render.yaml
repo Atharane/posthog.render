@@ -53,6 +53,8 @@ services:
     numInstances: 1
     autoDeploy: false
     envVars:
+      - key: SKIP_SERVICE_VERSION_REQUIREMENTS
+        value: 1
       - key: POSTHOG_REDIS_HOST
         fromService:
           name: posthog-redis
