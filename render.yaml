@@ -2,7 +2,7 @@ databases:
   - name: posthog
     databaseName: posthog
     user: posthog
-    plan: standard # PostHog can quickly use up hundreds of MBs of disk space, depending on the volume of analytics
+    plan: pro # $50/month - 10 GB storage
 
 services:
   - type: web
